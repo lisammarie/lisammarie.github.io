@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cookie Run Kingdom Quest: Caramel Arrow’s Challenge</title>
+  <meta name="description" content="Play as Caramel Arrow Cookie and make safe digital choices to avoid online harms exacerbated by generative AI. Learn and have fun with this interactive Cookie Run Kingdom themed game!" />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600&display=swap" rel="stylesheet" />
+  <style>
+    /* Reset & base */
+    * {
+      box-sizing: border-box;
+    }
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: 'Quicksand', sans-serif;
+        background: url('background.jpg') no-repeat center center fixed;
+        background-size: cover;
+        color: #f4e7da;
+        overflow-x: hidden;
+        user-select: none;
+}
+
+
+   #game-container {
+  width: 100vw;
+  height: 100vh;
+  padding: 30px 20px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  background: transparent url(cookie\ run\ background.png);
+  overflow: hidden;
+}
+
+    #progress-bar {
+      width: 90%;
+      max-width: 960px;
+      height: 12px;
+      background: #3a2b50;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      box-shadow: 0 0 5px #7a5eaa;
+    }
+
+    #progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #c97a50;
+      border-radius: 8px;
+      transition: width 0.5s ease;
+      box-shadow: 0 0 10px #f9d3a1;
+    }
+
+    .scene {
+      width: 90%;
+      max-width: 960px;
+      background-color: rgba(43, 29, 61, 0.9);
+      border-radius: 16px;
+      padding: 20px 25px;
+      box-shadow: 0 0 25px #7a5eaa;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      color: #f4e7da;
+    }
+
+    .scene.active {
+      display: flex;
+    }
+
+    h2 {
+      margin: 0 0 15px 0;
+      font-weight: 700;
+      text-shadow: 1px 1px 5px #2d1f48;
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.5;
+      margin-bottom: 30px;
+      text-shadow: 0 0 3px #2d1f48;
+    }
+
+    button.choice {
+      cursor: pointer;
+      background: #c97a50;
+      border: none;
+      padding: 14px 25px;
+      margin: 10px 0;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: #fff2db;
+      border-radius: 12px;
+      box-shadow: 0 0 12px #f9d3a1;
+      transition: background-color 0.3s ease;
+      user-select: none;
+      width: 100%;
+      max-width: 500px;
+    }
+    button.choice:hover, button.choice:focus {
+      background: #e6aa6a;
+      outline: none;
+    }
+
+    /* Lore and buttons */
+    #lore-scene p {
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #next-button {
+      margin-top: 15px;
+      background: #a86d3f;
+      box-shadow: 0 0 12px #d2a05a;
+    }
+
+    #next-button:hover {
+      background: #c38c4c;
+    }
+
+    /* Caramel Arrow Sprite */
+    #caramel-arrow {
+      position: fixed;
+      bottom: 20px;
+      left: 0%;
+      width: 140px;
+      height: 140px;
+      background-image: url('background.jpg'); /* idle sprite placeholder */
+      background-size: 100% 100%;
+      animation: none;
+      z-index: 10000;
+      pointer-events: none;
+      transition: left 1.2s ease;
+      filter: drop-shadow(0 0 5px #c57e4b);
+    }
+
+    #caramel-arrow.running {
+      background-image: url('correct.jpg'); /* running sprite placeholder */
+      background-size: 480% 100%;
+      animation: runAnim 1s steps(5) 1 forwards;
+    }
+
+    #caramel-arrow.hurt {
+      background-image: url('wrong.jpg'); /* hurt sprite placeholder */
+      background-size: 100% 100%;
+      animation: none;
+      filter: drop-shadow(0 0 8px #c53939);
+    }
+
+    #caramel-arrow.defeated {
+      background-image: url('wrong.jpg'); /* defeated sprite placeholder */
+      background-size: 100% 100%;
+      animation: none;
+      filter: drop-shadow(0 0 12px #8b1c1c);
+      left: 80% !important;
+      bottom: 10px;
+    }
+
+    /* Animations */
+    @keyframes runAnim {
+      from { background-position-x: 0%; }
+      to { background-position-x: 100%; }
+    }
+
+    /* Responsive text scaling */
+    @media (max-width: 768px) {
+      #game-container {
+        padding: 20px 10px 10px 10px;
+      }
+      .scene {
+        width: 95%;
+        padding: 15px 20px;
+      }
+      button.choice {
+        font-size: 1rem;
+        padding: 12px 20px;
+      }
+      #caramel-arrow {
+        width: 110px;
+        height: 110px;
+        bottom: 15px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #caramel-arrow {
+        width: 90px;
+        height: 90px;
+        bottom: 10px;
+      }
+    }
+    #game-finish {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: url('win-background.jpg') no-repeat center center;
+  background-size: cover;
+  z-index: 9999;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #fffbe8;
+  font-size: 1.3rem;
+  padding: 40px 20px;
+}
+.fade-in {
+  animation: fadeIn 1s ease-in forwards;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+#caramel-happy {
+  width: 180px;
+  height: 180px;
+  background-image: url('caramel-happy.gif'); /* Use your happy sprite */
+  background-size: contain;
+  background-repeat: no-repeat;
+  margin-bottom: 20px;
+  animation: bounce 1.2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <section id="game-finish">
+  <div id="caramel-happy"></div>
+  <h2>Sweet Success! 🍬</h2>
+  <p>You made all the right choices, and the Kingdom is safe thanks to your wisdom!</p>
+  <button id="finish-button" class="choice">Play Again</button>
+</section>
+    <div id="progress-bar">
+      <div id="progress-bar-fill"></div>
+    </div>
+
+    <!-- Lore intro scene -->
+    <section id="lore-scene" class="scene active" style="display:flex; flex-direction: column; align-items: center; justify-content: center;">
+      <h2>Welcome to Cookie Run Kingdom Quest!</h2>
+      <p>
+        Cookie Run Kingdom (CRK) is a magical world where brave cookies face challenges and adventures.<br><br>
+        You are <strong>Caramel Arrow Cookie</strong>, a swift and clever archer on a quest to protect the kingdom of cookies from the curse of being rebaked.<br><br>
+        Beware the dangers of online harm as you make choices that will decide your fate in the kingdom. Can you stay safe and succeed in the quest?<br>
+      </p>
+      <button id="next-button" class="choice">Start Your Quest</button>
+    </section>
+
+    <!-- Question scenes container -->
+    <section id="scene-container" style="display:none; flex-direction: column; align-items: center; width: 100%; max-width: 960px;">
+      <!-- Scenes will be dynamically inserted here -->
+    </section>
+
+    <!-- Game Over Screen -->
+    <section id="game-over" class="scene" style="display:none; flex-direction: column; justify-content: center;">
+      <h2>Defeated by the Corrosion Curse 💔</h2>
+      <p>You made unsafe online choices and were overwhelmed by the curse of being rebaked.<br>Stay vigilant next time!</p>
+      <button id="retry-button" class="choice">Try Again</button>
+    </section>
+
+    <!-- Win Screen -->
+    <section id="game-win" class="scene" style="display:none; flex-direction: column; justify-content: center;">
+      <h2>Victory! You saved the Kingdom! 🎉</h2>
+      <p>Caramel Arrow Cookie triumphed over the rebake curse and kept the cookie kingdom safe.<br>Well done!</p>
+      <button id="play-again-button" class="choice">Play Again</button>
+    </section>
+  </div>
+
+  <!-- Caramel Arrow sprite -->
+  <div id="caramel-arrow"></div>
+
+  <!-- Background music -->
+  <audio id="bg-music" loop preload="auto" src="https://cdn.pixabay.com/download/audio/2021/09/04/audio_1f4379c3f3.mp3?filename=lofi-beat-12624.mp3"></audio>
+
+  <!-- Optional sound effects -->
+  <audio id="correct-sound" src="https://freesound.org/data/previews/320/320181_5260874-lq.mp3" preload="auto"></audio>
+  <audio id="wrong-sound" src="https://freesound.org/data/previews/353/353115_5121236-lq.mp3" preload="auto"></audio>
+
+  <script>
+    // Questions & answers data
+    const scenes = [
+      {
+        question: "An anonymous Cookie messages you asking for the password to your kingdom's vault of flour! What do you do?",
+        options: [
+          { text: "Share the location to be friendly.", safe: false, feedback: "Sharing secret recipes can lead to impersonation and theft." },
+          { text: "Politely decline and keep it private, the flour location is private information!", safe: true, feedback: "Good choice! Keeping private info safe helps avoid online harms." }
+        ]
+      },
+      {
+        question: "Someone asks for your kingdom location to meet up. What do you say?",
+        options: [
+          { text: "Agree and give them your location.", safe: false, feedback: "Giving out locations online can be dangerous and lead to grooming." },
+          { text: "Say no and keep chatting in the game.", safe: true, feedback: "Wise choice! Keep conversations safe and in-app." }
+        ]
+      },
+      {
+        question: "A Cookie sends you a suspicious AI-generated video asking you to share one back. What do you do?",
+        options: [
+          { text: "Send your own video back.", safe: false, feedback: "This can lead to image abuse and loss of control over your content." },
+          { text: "Ignore and report the message.", safe: true, feedback: "Excellent! Reporting helps keep the community safe." }
+        ]
+      },
+      {
+        question: "You get a message threatening to share embarrassing info unless you pay up. How do you respond?",
+        options: [
+          { text: "Pay to keep it secret.", safe: false, feedback: "Paying encourages sextortion and can cause ongoing harm." },
+          { text: "Report the message and block the sender.", safe: true, feedback: "Correct! Reporting helps stop the threat." }
+        ]
+      },
+      {
+        question: "Someone online asks you to download a new 'cool' mod. What should you do?",
+        options: [
+          { text: "Download it right away to join the fun.", safe: false, feedback: "Unknown downloads can contain malware and compromise your security." },
+          { text: "Avoid downloading and check with official sources.", safe: true, feedback: "Good! Staying cautious helps protect you." }
+        ]
+      },
+      {
+        question: "A stranger wants to video chat with you even though you just met. What do you do?",
+        options: [
+          { text: "Agree to video chat immediately.", safe: false, feedback: "Video chatting with strangers can expose you to grooming." },
+          { text: "Decline politely and keep communication in text.", safe: true, feedback: "Smart choice! Stay safe by keeping communication text-based initially." }
+        ]
+      }
+      
+    ];
+
+    const maxLives = 3;
+    let lives = maxLives;
+    let score = 0;
+    let currentSceneIndex = 0;
+    let currentStep = 0;
+
+    const gameContainer = document.getElementById('game-container');
+    const loreScene = document.getElementById('lore-scene');
+    const sceneContainer = document.getElementById('scene-container');
+    const gameOverEl = document.getElementById('game-over');
+    const gameWinEl = document.getElementById('game-win');
+    const caramelArrow = document.getElementById('caramel-arrow');
+    const progressFill = document.getElementById('progress-bar-fill');
+    const bgMusic = document.getElementById('bg-music');
+    const correctSound = document.getElementById('correct-sound');
+    const wrongSound = document.getElementById('wrong-sound');
+
+    // Buttons
+    const nextButton = document.getElementById('next-button');
+    const retryButton = document.getElementById('retry-button');
+    const playAgainButton = document.getElementById('play-again-button');
+
+    // Build question scenes dynamically
+    function buildScenes() {
+      sceneContainer.innerHTML = '';
+      scenes.forEach((scene, index) => {
+        const sceneEl = document.createElement('section');
+        sceneEl.classList.add('scene');
+        if(index === 0) sceneEl.classList.add('active');
+        sceneEl.setAttribute('data-index', index);
+
+        const q = document.createElement('div');
+        q.className = 'question';
+        q.style.fontSize = '1.3rem';
+        q.style.marginBottom = '25px';
+        q.textContent = `${index + 1}. ${scene.question}`;
+        sceneEl.appendChild(q);
+
+        scene.options.forEach(option => {
+          const btn = document.createElement('button');
+          btn.className = 'choice';
+          btn.textContent = option.text;
+          btn.setAttribute('data-safe', option.safe);
+          btn.setAttribute('data-feedback', option.feedback);
+          btn.addEventListener('click', () => handleChoice(btn));
+          sceneEl.appendChild(btn);
+        });
+
+        sceneContainer.appendChild(sceneEl);
+      });
+    }
+
+    // Show scene by index
+    function showScene(idx) {
+      const allScenes = sceneContainer.querySelectorAll('.scene');
+      allScenes.forEach(scene => scene.classList.remove('active'));
+      if(allScenes[idx]) allScenes[idx].classList.add('active');
+    }
+
+    // Update progress bar fill
+    function updateProgress() {
+      progressFill.style.width = `${(score / scenes.length) * 100}%`;
+    }
+
+    // Update lives in document title with hearts
+    function updateLives() {
+      document.title = `❤️`.repeat(lives) + ` - Cookie Run Kingdom Quest`;
+    }
+
+    // Handle choice button click
+    function handleChoice(button) {
+      const isSafe = button.getAttribute('data-safe') === 'true';
+      const feedback = button.getAttribute('data-feedback');
+
+      alert(feedback);
+
+      if (isSafe === true || isSafe === "true") {
+        score++;
+        updateProgress();
+        if(correctSound) correctSound.play();
+        runCaramelArrowStep();
+      } else {
+        lives--;
+        updateLives();
+        if(wrongSound) wrongSound.play();
+        showHurtAnimation();
+
+        if (lives <= 0) {
+          setTimeout(() => {
+            showDefeatedAnimation();
+          }, 1500);
+          setTimeout(() => {
+            showGameOver();
+          }, 3200);
+        } else {
+          // After hurt animation, show next question
+          setTimeout(() => {
+            currentSceneIndex++;
+            if(currentSceneIndex >= scenes.length){
+              // Game end if out of questions
+              showGameOver();
+            } else {
+              showScene(currentSceneIndex);
+            }
+          }, 1500);
+        }
+      }
+    }
+
+    // Caramel Arrow runs a step forward
+    function runCaramelArrowStep() {
+      caramelArrow.classList.remove('hurt', 'defeated');
+      caramelArrow.classList.add('running');
+
+      const totalSteps = scenes.length; // 6 questions
+      currentStep++;
+
+      const stepIncrement = 90 / totalSteps;
+      const newLeftPercent = stepIncrement * currentStep;
+
+      caramelArrow.style.left = `${newLeftPercent}%`;
+
+      setTimeout(() => {
+        caramelArrow.classList.remove('running');
+
+        if (currentStep >= totalSteps) {
+          showWin();
+        } else {
+          currentSceneIndex++;
+          showScene(currentSceneIndex);
+        }
+      }, 1100);
+    }
+
+    // Hurt animation
+    function showHurtAnimation() {
+      caramelArrow.classList.add('hurt');
+      caramelArrow.classList.remove('running');
+      caramelArrow.style.animationPlayState = 'paused';
+      caramelArrow.style.left = caramelArrow.style.left || '0%';
+
+      setTimeout(() => {
+        caramelArrow.classList.remove('hurt');
+      }, 1500);
+    }
+
+    // Defeated animation
+    function showDefeatedAnimation() {
+      caramelArrow.classList.remove('hurt', 'running');
+      caramelArrow.classList.add('defeated');
+      caramelArrow.style.animationPlayState = 'paused';
+      caramelArrow.style.left = '80%';
+    }
+
+    // Show game over screen
+    function showGameOver() {
+      sceneContainer.style.display = 'none';
+      gameOverEl.style.display = 'flex';
+      progressFill.style.width = '0%';
+    }
+
+    // Show win screen
+    function showWin() {
+      sceneContainer.style.display = 'none';
+      gameWinEl.style.display = 'flex';
+      progressFill.style.width = '100%';
+    }
+
+    // Start the game after lore
+    function startGame() {
+      loreScene.style.display = 'none';
+      sceneContainer.style.display = 'flex';
+      gameOverEl.style.display = 'none';
+      gameWinEl.style.display = 'none';
+
+      lives = maxLives;
+      score = 0;
+      currentSceneIndex = 0;
+      currentStep = 0;
+
+      updateLives();
+      updateProgress();
+
+      caramelArrow.classList.remove('defeated', 'hurt', 'running');
+      caramelArrow.style.left = '0%';
+
+      showScene(currentSceneIndex);
+
+      if(bgMusic.paused) bgMusic.play();
+    }
+
+    // Event listeners for buttons
+    nextButton.addEventListener('click', () => {
+      buildScenes();
+      startGame();
+    });
+
+    retryButton.addEventListener('click', () => {
+      buildScenes();
+      startGame();
+    });
+
+    playAgainButton.addEventListener('click', () => {
+      buildScenes();
+      startGame();
+    });
+
+    // Autoplay music if allowed
+    let musicPlaying = false;
+    bgMusic.volume = 0.3;
+    bgMusic.addEventListener('play', () => { musicPlaying = true; });
+
+  </script>
+</body>
+</html>
